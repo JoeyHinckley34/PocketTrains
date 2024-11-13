@@ -35,13 +35,12 @@ def process_train_network_data(file_path):
     
     return df
 
-def create_train_network_map(df, cost_column='Cost to Build'):
+def create_train_network_map(df):
     """
     Create an interactive map visualization of train networks using folium.
     
     Parameters:
     df (pandas.DataFrame): Processed DataFrame
-    cost_column (str): Which cost column to use for edge weights
     
     Returns:
     folium.Map: Interactive map with train network
@@ -66,22 +65,18 @@ def create_train_network_map(df, cost_column='Cost to Build'):
     for _, row in all_cities.iterrows():
         if pd.notna(row['lat']) and pd.notna(row['long']):
             # Invert coordinates for "Broome"
-            if row['city'] == "Broome":
-                city_coords[row['city']] = (row['long'], row['lat'])  # Inverted
-            else:
-                city_coords[row['city']] = (row['lat'], row['long'])
+            city_coords[row['city']] = (row['lat'], row['long'])
             G.add_node(row['city'], pos=(row['lat'], row['long']))
     
-    # Add edges with costs
+    # Add edges without costs
     for _, row in df.iterrows():
         if (row['Source'] in city_coords and 
             row['Destination'] in city_coords):
             G.add_edge(
                 row['Source'],
                 row['Destination'],
-                weight=row[cost_column],
-                water=row['Water'],
-                fuel=row['Fuel']
+                fuel=row['Fuel'],  # Only keep fuel
+                water=row['Water']  # Keep water if needed
             )
     
     # Calculate center of the map
@@ -95,12 +90,12 @@ def create_train_network_map(df, cost_column='Cost to Build'):
                   zoom_start=4,
                   tiles='CartoDB positron')
     
-    # Add cities as markers
+    # Add cities as markers with coordinates in the popup
     for city, coords in city_coords.items():
         folium.CircleMarker(
             location=coords,
             radius=6,
-            popup=city,
+            popup=f"{city}<br>Coordinates: {coords[0]}, {coords[1]}",
             color='#3186cc',
             fill=True,
             fill_color='#3186cc',
@@ -112,10 +107,9 @@ def create_train_network_map(df, cost_column='Cost to Build'):
         coords1 = city_coords[city1]
         coords2 = city_coords[city2]
         
-        # Create popup content with all relevant information
+        # Create popup content with relevant information
         popup_content = f"""
         <b>{city1} to {city2}</b><br>
-        Cost: {data['weight']}<br>
         Fuel: {data['fuel']}<br>
         Water: {data['water']}
         """
@@ -153,9 +147,6 @@ def create_train_network_map(df, cost_column='Cost to Build'):
 # Process the data
 df = process_train_network_data('PocketTrainsWithLocations.csv')
 
-# Create the map using different cost columns
-build_cost_map = create_train_network_map(df, cost_column='Cost to Build')
-build_cost_map.save('train_network_build_costs.html')
-
-claim_cost_map = create_train_network_map(df, cost_column='Cost to Claim')
-claim_cost_map.save('train_network_claim_costs.html')
+# Create the map
+train_network_map = create_train_network_map(df)
+train_network_map.save('train_network.html')
