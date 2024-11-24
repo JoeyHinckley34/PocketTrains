@@ -362,21 +362,40 @@ def save_network_map(train_network_map, filename='train_network.html'):
     print(f"\nSaving map to '{filename}'...")
     train_network_map.save(filename)
 
-if __name__ == '__main__':
+def process_train_network(file_path='PocketTrainsWithLocations.csv', num_trains=10):
+    """
+    Process the entire train network workflow from data loading to map creation.
+    Returns the final map and graph, or raises an exception if any step fails.
+    """
     print(f"\n[{time.strftime('%H:%M:%S')}] Starting program...")
     total_start_time = time.time()
     
-    df = load_and_process_data()
-    
-    if df is not None:
-        train_network_map, train_graph = create_initial_network(df)
-        
-        if train_graph:
-            routes = generate_train_routes(train_graph)
+    try:
+        df = process_train_network_data(file_path)
+        if df is None:
+            raise ValueError("Failed to process train network data")
             
-            if routes:
-                train_network_map, train_graph = create_train_network_map(df, routes)
-                save_network_map(train_network_map)
-    
-    print(f"\n[{time.strftime('%H:%M:%S')}] Program completed in {time.time() - total_start_time:.2f} seconds")
+        _, train_graph = create_train_network_map(df)
+        if train_graph is None:
+            raise ValueError("Failed to create initial network")
+            
+        routes = assign_train_routes(train_graph, num_trains)
+        if routes is None:
+            raise ValueError("Failed to generate train routes")
+            
+        train_network_map, _ = create_train_network_map(df, routes)
+        if train_network_map is None:
+            raise ValueError("Failed to create final network map")
+            
+        save_network_map(train_network_map)
+        
+        print(f"\n[{time.strftime('%H:%M:%S')}] Program completed in {time.time() - total_start_time:.2f} seconds")
+        return train_network_map, train_graph
+        
+    except Exception as e:
+        print(f"Error processing train network: {str(e)}")
+        return None, None
+
+if __name__ == '__main__':
+    process_train_network()
 
