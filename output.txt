@@ -1,0 +1,34 @@
+
+[18:53:23] Starting program...
+
+[18:53:23] Starting data processing...
+[18:53:24] Data processing completed in 0.16 seconds
+
+[18:53:24] Starting map creation...
+Created graph with 139 nodes and 188 edges
+Collected coordinates for 139 cities
+[18:53:24] Map creation completed in 0.07 seconds
+
+[18:53:24] Starting route assignment...
+
+Route Statistics:
+Train 1 (12 cities, Total fuel: 854): Beijing -> Shenyang -> Seoul -> Vladivostok -> Harbin -> Yakutsk -> Magadan -> Anadyr -> Denver -> Phoenix -> Dakar -> Fortaleza
+Train 2 (14 cities, Total fuel: 754): Budapest -> Berlin -> Athens -> Urumqi -> Novosibirsk -> Ulan_Bator -> Harare -> Pretoria -> Cape_Town -> Luanda -> Belem -> Auckland -> Wellington -> Christchurch
+Train 3 (14 cities, Total fuel: 812): Chengdu -> Xi'An -> Shanghai -> Hong_Kong -> Hanoi -> Bangkok -> Singapore -> Jakarta -> Nagasaki -> Tokyo -> Sendai -> San_Francisco -> Los_Angeles -> Mexico_City
+Train 4 (12 cities, Total fuel: 759): Kiev -> Minsk -> Istanbul -> Baghdad -> Amman -> Cairo -> Khartoum -> Nairobi -> Zanzibar -> Antananarivo -> Kinshasa -> Riyadh
+Train 5 (11 cities, Total fuel: 788): Milan -> Rome -> Barcelona -> Madrid -> Lisbon -> New_York -> Boston -> Washington_DC -> Casablanca -> Algiers -> Tripoli
+Train 6 (13 cities, Total fuel: 844): Moscow -> St._Petersburg -> Helsinki -> Volgograd -> Perm -> Kolkata -> Bangalore -> Calgary -> Edmonton -> Winnipeg -> Minneapolis -> Vancouver -> Anchorage
+Train 7 (14 cities, Total fuel: 775): Munich -> Porto_Alegre -> Asuncion -> Arequipa -> Lima -> Bogota -> Caracas -> San_Juan -> Havana -> Miami -> Atlanta -> Buenos_Aires -> Rio_de_Janeiro -> Salvador
+Train 8 (12 cities, Total fuel: 787): Paris -> London -> Dublin -> Bordeaux -> Glasgow -> Reykjavik -> Tasiilaq -> Nuuk -> Goose_Bay -> Perth -> Santiago -> Punta_Arenas
+Train 9 (12 cities, Total fuel: 739): Adelaide -> Melbourne -> Sydney -> Brisbane -> Cairns -> Darwin -> Broome -> Kupang -> Manado -> Manila -> Alice_Springs -> Alice Springs
+Train 10 (25 cities, Total fuel: 732): Amsterdam -> Copenhagen -> Oslo -> Stockholm -> Tehran -> Kabul -> New_Delhi -> Karachi -> Mumbai -> St._Louis -> Chicago -> Detroit -> Toronto -> Montreal -> New_Orleans -> Houston -> Lagos -> Bamako -> Managua -> Manaus -> Easter_Islands -> Dubai -> Fairbanks -> Nome -> Honolulu
+[18:53:24] Route assignment completed in 0.00 seconds
+
+[18:53:24] Starting map creation...
+Created graph with 139 nodes and 188 edges
+Collected coordinates for 139 cities
+[18:53:24] Map creation completed in 0.08 seconds
+
+Saving map to 'train_network.html'...
+
+[18:53:24] Program completed in 0.70 seconds
