@@ -270,103 +270,113 @@ def assign_train_routes(G, num_trains):
         print("Error: More trains than cities")
         return None
     
-    # Get connected components of the graph
-    components = list(nx.connected_components(G))
-    
-    if len(components) > num_trains:
-        print("Error: Network has more disconnected components than trains")
-        return None
-    
     routes = [[] for _ in range(num_trains)]
+    route_costs = [0] * num_trains  # Track total fuel cost of each route
     unassigned_cities = set(G.nodes())
-    train_index = 0
     
-    print(f"Network has {len(G.nodes())} cities and {len(G.edges())} connections")
-    print(f"Attempting to assign {num_trains} trains")
+    # Start with major hub cities (highest degree) for each train
+    hub_cities = sorted(G.nodes(), key=lambda x: G.degree(x), reverse=True)[:num_trains]
+    for i, city in enumerate(hub_cities):
+        routes[i].append(city)
+        unassigned_cities.remove(city)
     
     while unassigned_cities:
-        current_route = routes[train_index]
-        
-        # If this is the start of a new route
-        if not current_route:
-            start_city = max(unassigned_cities, 
-                           key=lambda city: G.degree(city))
-            current_route.append(start_city)
-            unassigned_cities.remove(start_city)
-            current_city = start_city
-        else:
-            current_city = current_route[-1]
+        # Find the route with the lowest total fuel cost
+        cheapest_route_idx = min(range(num_trains), key=lambda i: route_costs[i])
+        current_route = routes[cheapest_route_idx]
+        current_city = current_route[-1]
         
         # Find all unassigned neighbors
-        neighbors = [n for n in G.neighbors(current_city) 
-                    if n in unassigned_cities]
+        neighbors = [n for n in G.neighbors(current_city) if n in unassigned_cities]
         
         if neighbors:
-            # Choose the neighbor with highest degree
-            next_city = max(neighbors, key=lambda city: G.degree(city))
+            # Choose the neighbor with lowest fuel cost
+            next_city = min(neighbors, 
+                          key=lambda n: G[current_city][n]['fuel'])
             current_route.append(next_city)
+            route_costs[cheapest_route_idx] += G[current_city][next_city]['fuel']
             unassigned_cities.remove(next_city)
         else:
-            # If no unassigned neighbors, move to next train
-            train_index = (train_index + 1) % num_trains
-            
-            # Add a safety check to prevent infinite loops
-            if all(not set(G.neighbors(routes[i][-1])) & unassigned_cities 
-                   for i in range(num_trains) if routes[i]):
-                # If we can't continue any existing routes, start a new one
-                if unassigned_cities:
-                    train_index = min(range(num_trains), 
-                                    key=lambda i: len(routes[i]))
-                    # Force the next iteration to start a new route
-                    routes[train_index] = []
+            # If no unassigned neighbors, find the closest unassigned city to any city in the route
+            if unassigned_cities:
+                min_fuel = float('inf')
+                best_pair = None
+                
+                for route_city in current_route:
+                    for unassigned in unassigned_cities:
+                        if G.has_edge(route_city, unassigned):
+                            fuel_cost = G[route_city][unassigned]['fuel']
+                            if fuel_cost < min_fuel:
+                                min_fuel = fuel_cost
+                                best_pair = (route_city, unassigned)
+                
+                if best_pair:
+                    next_city = best_pair[1]
+                    current_route.append(next_city)
+                    route_costs[cheapest_route_idx] += min_fuel
+                    unassigned_cities.remove(next_city)
                 else:
-                    break  # Exit if no more cities to assign
-        
-        # Print progress
-        if len(unassigned_cities) % 10 == 0:
-            assigned = sum(len(route) for route in routes)
-            print(f"Remaining cities: {len(unassigned_cities)}, "
-                  f"Assigned cities: {assigned}, "
-                  f"Current train: {train_index + 1}")
+                    # If no connection found, start a new segment with the highest-degree unassigned city
+                    next_city = max(unassigned_cities, key=lambda c: G.degree(c))
+                    current_route.append(next_city)
+                    unassigned_cities.remove(next_city)
     
-    # Clean up empty routes
-    routes = [route for route in routes if route]
+    # Print route statistics
+    print("\nRoute Statistics:")
+    for i, (route, cost) in enumerate(zip(routes, route_costs), 1):
+        print(f"Train {i} ({len(route)} cities, Total fuel: {cost}): {' -> '.join(route)}")
     
     print(f"[{time.strftime('%H:%M:%S')}] Route assignment completed in {time.time() - start_time:.2f} seconds")
     return routes
+
+def load_and_process_data(file_path='PocketTrainsWithLocations.csv'):
+    """Load and process the train network data from CSV."""
+    print(f"Processing data file: '{file_path}'")
+    df = process_train_network_data(file_path)
+    
+    if df is not None:
+        print(f"Loaded {len(df)} train connections")
+        return df
+    return None
+
+def create_initial_network(df):
+    """Create the initial network map and graph."""
+    train_network_map, train_graph = create_train_network_map(df)
+    return train_network_map, train_graph
+
+def generate_train_routes(train_graph, num_trains=10):
+    """Generate and display train routes."""
+    print(f"\nAssigning {num_trains} trains to routes...")
+    routes = assign_train_routes(train_graph, num_trains)
+    
+    if routes:
+        for i, route in enumerate(routes, 1):
+            if route:
+                print(f"Train {i} ({len(route)} cities): {' -> '.join(route)}")
+            else:
+                print(f"Train {i}: No cities assigned")
+    return routes
+
+def save_network_map(train_network_map, filename='train_network.html'):
+    """Save the network map to an HTML file."""
+    print(f"\nSaving map to '{filename}'...")
+    train_network_map.save(filename)
 
 if __name__ == '__main__':
     print(f"\n[{time.strftime('%H:%M:%S')}] Starting program...")
     total_start_time = time.time()
     
-    print("Processing data file: 'PocketTrainsWithLocations.csv'")
-    df = process_train_network_data('PocketTrainsWithLocations.csv')
+    df = load_and_process_data()
     
     if df is not None:
-        print(f"Loaded {len(df)} train connections")
-        
-        # First create the initial map and get the graph
-        train_network_map, train_graph = create_train_network_map(df)
+        train_network_map, train_graph = create_initial_network(df)
         
         if train_graph:
-            num_trains = 10
-            print(f"\nAssigning {num_trains} trains to routes...")
-            
-            routes = assign_train_routes(train_graph, num_trains)
+            routes = generate_train_routes(train_graph)
             
             if routes:
-                # Print complete routes for each train
-                for i, route in enumerate(routes, 1):
-                    if route:  # Only print if route is not empty
-                        print(f"Train {i} ({len(route)} cities): {' -> '.join(route)}")
-                    else:
-                        print(f"Train {i}: No cities assigned")
-            
-            print("\nCreating train network map...")
-            train_network_map, train_graph = create_train_network_map(df, routes)
-        
-            print(f"\nSaving map to 'train_network.html'...")
-            train_network_map.save('train_network.html')
+                train_network_map, train_graph = create_train_network_map(df, routes)
+                save_network_map(train_network_map)
     
     print(f"\n[{time.strftime('%H:%M:%S')}] Program completed in {time.time() - total_start_time:.2f} seconds")
 
